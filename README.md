@@ -21,3 +21,16 @@ Look for an AWS Tag, check if the instance is in the correct state, and take act
   * Create Role
     * Trusted Entites: Lambda
     * Attach Above policy
+* Create Lambda
+  * Name Function
+  * Runtime : Python 3.6 (Also Tested in Python 2.6)
+  * Select Above Role
+  * Paste In Script
+  * Edit Region
+  * Handler: lambda_function.lambda_handler
+  * Add CloudWatch Event
+    * Create Rule
+    * Schedule: Cron expression
+    * Example : 0 8 ? * * *
+    * Enable Trigger
+
