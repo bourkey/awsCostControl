@@ -2,7 +2,7 @@
 
 ## github.com/bourkey ##
 
-A Simple (set of) Script(s) to Shutdown Instances off a cron job setup in Cloud Watch
+A Simple (set of) Script(s) to alter Instance state based on a CloudWatch Event Rule
 
 Look for an AWS Tag, check if the instance is in the correct state, and take action.
 
