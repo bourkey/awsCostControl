@@ -39,7 +39,7 @@ Resources:
             Resource: "*"
       PolicyName: !Ref PolicyName
       
-  iamRoleCostControl:
+  iamRoleCostControl: 
     Type: 'AWS::IAM::Role'
     Properties: 
       AssumeRolePolicyDocument: 
@@ -88,28 +88,6 @@ Resources:
             ec2client.stop_instances(InstanceIds=ec2RunningInstancesIDs)
             exit(0)
 
-  ruleStopInstances:
-    Type: 'AWS::Events::Rule'
-    Properties:
-      FunctionName: !Ref lambdaStopInstances
-      Action: "lambda:InvokeFunction"
-      Principal: "events.amazonaws.com"
-      SourceArn: 
-        Fn::GetAtt: 
-          - "EventRule"
-          - "Arn"
-
-  ruleStartInstances:
-    Type: 'AWS::Events::Rule'
-    Properties:
-      FunctionName: !Ref lambdaStartInstances
-      Action: "lambda:InvokeFunction"
-      Principal: "events.amazonaws.com"
-      SourceArn: 
-        Fn::GetAtt: 
-          - "EventRule"
-          - "Arn"
-
   lambdaStartInstances:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -141,6 +119,26 @@ Resources:
               ec2RunningInstancesIDs.append(instance.id)
             ec2client.start_instances(InstanceIds=ec2RunningInstancesIDs)
             exit(0)
+
+  eventRuleStopInstances:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: 'costControl-StopInstances'
+      Description: 'Event to Stop Instances'
+      ScheduleExpression: '0 8 ? * * *'
+      Targets:
+        - !Ref lambdaStopInstances
+
+
+  eventRuleStartInstances:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: 'costControl-StartInstances'
+      Description: 'Event to Start Instances'
+      ScheduleExpression: '0 19 ? * SUN-THU *'
+      Targets:
+        - !Ref lambdaStartInstances
+
 
   permissionStart:
     Type: 'AWS::Lambda::Permission'
