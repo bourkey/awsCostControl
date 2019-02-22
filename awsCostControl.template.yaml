@@ -91,7 +91,6 @@ Resources:
   lambdaStartInstances:
     Type: 'AWS::Lambda::Function'
     Properties:
-      Tags:
     Runtime: python3.6
     Environment:
       Variables:
