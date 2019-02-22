@@ -66,7 +66,7 @@ Resources:
         stopTag: !Ref StopTag
     Timeout: 30
     Handler: index.lambda_handler
-    Role: !GetAtt iamRoleCostControl.arn
+    Role: !GetAtt iamRoleCostControl.Arn
     Code:
       ZipFile: | 
         # import reqs
@@ -98,7 +98,7 @@ Resources:
         startTag: !Ref StartTag
     Timeout: 30
     Handler: index.lambda_handler
-    Role: !GetAtt iamRoleCostControl.arn
+    Role: !GetAtt iamRoleCostControl.Arn
     Code:
       ZipFile: | 
         # import reqs
@@ -144,8 +144,20 @@ Resources:
     Type: 'AWS::Lambda::Permission'
     Properties:
       FunctionName: !Ref lambdaStartInstances
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn:
+        'Fn::GetAtt':
+          - EventRule
+          - Arn
 
   permissionStop:
     Type: 'AWS::Lambda::Permission'
     Properties:
       FunctionName: !Ref lambdaStopInstances
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn:
+        'Fn::GetAtt':
+          - EventRule
+          - Arn
