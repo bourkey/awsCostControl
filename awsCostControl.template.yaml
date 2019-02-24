@@ -38,6 +38,7 @@ Resources:
               - "ec2:StopInstances"
             Resource: "*"
       PolicyName: !Ref PolicyName
+      Role: !Ref iamRoleCostControl
       
   iamRoleCostControl: 
     Type: 'AWS::IAM::Role'
@@ -55,24 +56,22 @@ Resources:
       Policies:
         - PolicyName: !Ref iamPolicyCostControl
 
-
   lambdaStopInstances:
     Type: 'AWS::Lambda::Function'
     Properties: 
-      Tags:
-    Runtime: python3.6
-    Environment:
-      Variables:
-        stopTag: !Ref StopTag
-    Timeout: 30
-    Handler: index.lambda_handler
-    Role: !GetAtt iamRoleCostControl.Arn
-    Code:
-      ZipFile: | 
-        # import reqs
-        import boto3, os
-        # Lamba Handler
-        def lambda_handler(event, context):
+      Runtime: python3.6
+      Environment:
+        Variables:
+          stopTag: !Ref StopTag
+      Timeout: 30
+      Handler: index.lambda_handler
+      Role: !GetAtt iamRoleCostControl.Arn
+      Code:
+        ZipFile: | 
+          # import reqs
+          import boto3, os
+          # Lamba Handler
+          def lambda_handler(event, context):
             ec2client = boto3.client('ec2')
             ec2 = boto3.resource('ec2')
             ec2RunningInstancesIDs = []
@@ -82,7 +81,7 @@ Resources:
             Filters=[
               {'Name': "tag:" + stopTag, 'Values': ['true']}, {'Name': 'instance-state-name', 'Values': ['running']}])
             if not instances:
-            exit(1)
+              exit(1)
             for instance in instances:
               ec2RunningInstancesIDs.append(instance.id)
             ec2client.stop_instances(InstanceIds=ec2RunningInstancesIDs)
@@ -91,33 +90,33 @@ Resources:
   lambdaStartInstances:
     Type: 'AWS::Lambda::Function'
     Properties:
-    Runtime: python3.6
-    Environment:
-      Variables:
-        startTag: !Ref StartTag
-    Timeout: 30
-    Handler: index.lambda_handler
-    Role: !GetAtt iamRoleCostControl.Arn
-    Code:
-      ZipFile: | 
-        # import reqs
-        import boto3, os
-        # Lamba Handler
-        def lambda_handler(event, context):
-            ec2client = boto3.client('ec2')
-            ec2 = boto3.resource('ec2')
-            ec2RunningInstancesIDs = []
-            startTag = os.environ.get('startTag')
-            instances = ec2.instances.filter(
-            # Filter Instances based On Tag, Check Current State
-            Filters=[
-              {'Name': "tag:" + startTag, 'Values': ['true']}, {'Name': 'instance-state-name', 'Values': ['stopped']}])
-            if not instances:
-            exit(1)
-            for instance in instances:
-              ec2RunningInstancesIDs.append(instance.id)
-            ec2client.start_instances(InstanceIds=ec2RunningInstancesIDs)
-            exit(0)
+        Runtime: python3.6
+        Environment:
+          Variables:
+            startTag: !Ref StartTag
+        Timeout: 30
+        Handler: index.lambda_handler
+        Role: !GetAtt iamRoleCostControl.Arn
+        Code:
+          ZipFile: | 
+            # import reqs
+            import boto3, os
+            # Lamba Handler
+            def lambda_handler(event, context):
+              ec2client = boto3.client('ec2')
+              ec2 = boto3.resource('ec2')
+              ec2RunningInstancesIDs = []
+              startTag = os.environ.get('startTag')
+              instances = ec2.instances.filter(
+              # Filter Instances based On Tag, Check Current State
+              Filters=[
+                {'Name': "tag:" + startTag, 'Values': ['true']}, {'Name': 'instance-state-name', 'Values': ['stopped']}])
+              if not instances:
+                exit(1)
+              for instance in instances:
+                ec2RunningInstancesIDs.append(instance.id)
+              ec2client.start_instances(InstanceIds=ec2RunningInstancesIDs)
+              exit(0)
 
   eventRuleStopInstances:
     Type: 'AWS::Events::Rule'
@@ -138,6 +137,12 @@ Resources:
       Targets:
         - !Ref lambdaStartInstances
 
+  permissionStop:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !Ref lambdaStopInstances
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
 
   permissionStart:
     Type: 'AWS::Lambda::Permission'
@@ -145,18 +150,5 @@ Resources:
       FunctionName: !Ref lambdaStartInstances
       Action: 'lambda:InvokeFunction'
       Principal: events.amazonaws.com
-      SourceArn:
-        'Fn::GetAtt':
-          - EventRule
-          - Arn
 
-  permissionStop:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      FunctionName: !Ref lambdaStopInstances
-      Action: 'lambda:InvokeFunction'
-      Principal: events.amazonaws.com
-      SourceArn:
-        'Fn::GetAtt':
-          - EventRule
-          - Arn
+
