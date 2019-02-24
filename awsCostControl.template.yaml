@@ -55,6 +55,7 @@ Resources:
               - "sts:AssumeRole"
       Policies:
         - PolicyName: !Ref iamPolicyCostControl
+    DependsOn: !Ref iamPolicyCostControl
 
   lambdaStopInstances:
     Type: 'AWS::Lambda::Function'
